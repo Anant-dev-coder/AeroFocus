@@ -1,1 +1,1 @@
-- [Expo web preview compatibility](expo-web-preview.md) — secure token storage and NativeWind color-scheme setup differ between browser previews and native builds.
+- [Expo web preview compatibility](expo-web-preview.md) — browser API origin, token storage, and NativeWind color-scheme setup differ from native builds.

@@ -42,12 +42,16 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function getAeroApiBaseUrl(): string {
-  const configuredBase =
-    process.env.EXPO_PUBLIC_API_BASE_URL ?? process.env.EXPO_PUBLIC_DOMAIN;
-  if (!configuredBase) return '';
-  return configuredBase.startsWith('http')
-    ? configuredBase.replace(/\/+$/, '')
-    : `https://${configuredBase.replace(/\/+$/, '')}`;
+  const configuredBase = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (!configuredBase && Platform.OS === 'web' && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  const base = configuredBase ?? process.env.EXPO_PUBLIC_DOMAIN;
+  if (!base) return '';
+  return base.startsWith('http')
+    ? base.replace(/\/+$/, '')
+    : `https://${base.replace(/\/+$/, '')}`;
 }
 
 export async function getAeroSessionToken(): Promise<string | null> {
