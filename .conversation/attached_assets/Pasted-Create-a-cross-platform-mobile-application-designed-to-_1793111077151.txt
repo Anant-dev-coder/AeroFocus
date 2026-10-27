@@ -1,0 +1,49 @@
+Create a cross-platform mobile application designed to break short-form video addiction through aggressive, witty roasts and visual gamification, built as a modern utility app. The application must feature user authentication, a live mock-overlay tracking dashboard, a dynamic "Brain Decay" visual system, an AI-powered roasting engine, and a competitive "Scroll Battles" multiplayer feature. 
+
+1. TECH STACK REQUIREMENTS:
+
+* Frontend: React Native with Expo (TypeScript) for cross-platform support.
+* Styling: Tailwind CSS (via NativeWind) for a modern, dark-mode, neon-accented UI.
+* Backend/Database: Firebase Auth and Firestore for real-time multiplayer syncing.
+* State Management: React Context API or Zustand for tracking active scroll metrics.
+
+1. DETAILED CORE FEATURES & ARCHITECTURE:
+
+A. Authentication & Onboarding 
+
+* Email/Password and Google sign-in screens.
+* An onboarding questionnaire asking users about their worst apps (Instagram, TikTok, YouTube Shorts).
+* Initial witty welcome message setting the aggressive, mocking tone of the app.
+
+B. The Live Scroll Tracker & Mock Overlay Dashboard 
+
+* A main dashboard displaying total screen time, scroll counts, and active app targets.
+* Create a mock floating action button (FAB) or simulator overlay component that represents the real-time tracker.
+* The tracker must display a live numeric scroll count that increments dynamically.
+
+C. Visual "Brain Decay" System 
+
+* A prominent center-stage visual asset of a human brain.
+* As the mock scroll count or screen time increases, the brain asset dynamically changes states: Healthy (Neon Green/Blue) -> Fatigued (Yellow) -> Cracking (Orange) -> Completely Rotted/Liquified (Grey/Slime Green).
+* Use local SVG components or smooth CSS transitions to represent these 5 stages of degradation.
+
+D. The AI Roasting Engine 
+
+* A dedicated notifications and alert module.
+* Program an array of at least 25 highly aggressive, witty, and sarcastic "brainrot" roasts (e.g., "Look at you, scrolling away your potential for 15 seconds of dopamine," "Your attention span is now shorter than a goldfish. Congratulations.").
+* Trigger these roasts via popup modals or banner notifications every time the scroll count passes specific thresholds (e.g., 10, 50, 100 scrolls).
+
+E. "Scroll Battles" Multiplayer Mode 
+
+* A social lobby where users can add friends via unique usernames.
+* A "Live Battle" interface showing a side-by-side comparison bar chart of the user's scroll count versus their friend's scroll count.
+* The player with the highest scroll count is visually labeled the "Brainrot Champion" with accompanying shaming text, while the user with the lowest count is praised.
+
+1. DEVELOPMENT STEPS & BOUNDARIES:
+
+* Step 1: Create a clean, modular file structure separating components, screens, hooks, and services.
+* Step 2: Build the UI layout first in full dark-mode (deep blacks, dark grays, sharp neon pink/green text).
+* Step 3: Implement local mock data for the scroll counts and timers so the core loops can be fully tested without relying on native Android/iOS Accessibility APIs immediately.
+* Step 4: Add Firebase integration for user profiles and the multiplayer leaderboard system.
+
+Please provide a brief architectural layout and step-by-step implementation plan before writing the codebase.
