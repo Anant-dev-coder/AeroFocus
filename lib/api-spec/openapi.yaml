@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: Auth
+    description: Mobile authentication endpoints.
+  - name: AeroFocus
+    description: AeroFocus profiles, tracking, and social battles.
 paths:
   /healthz:
     get:
@@ -24,7 +28,264 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/user:
+    get:
+      tags: [Auth]
+      operationId: getCurrentAuthUser
+      summary: Get the currently authenticated user
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: Auth status resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserEnvelope"
+  /login:
+    get:
+      tags: [Auth]
+      operationId: beginBrowserLogin
+      summary: Start the browser OIDC login flow
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to the OIDC authorization endpoint.
+  /callback:
+    get:
+      tags: [Auth]
+      operationId: handleBrowserLoginCallback
+      summary: Complete the browser OIDC login flow
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: iss
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uri
+      responses:
+        "302":
+          description: Redirect after login.
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the browser session and begin OIDC logout
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect after logout.
+  /mobile-auth/token-exchange:
+    post:
+      tags: [Auth]
+      operationId: exchangeMobileAuthorizationCode
+      summary: Exchange a mobile OIDC code for a session token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileTokenExchangeRequest"
+      responses:
+        "200":
+          description: Session created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileTokenExchangeSuccess"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Token did not contain usable claims.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Token exchange failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /mobile-auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logoutMobileSession
+      summary: Delete a mobile session token
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      responses:
+        "200":
+          description: Logout processed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutSuccess"
+  /aero/profile:
+    get:
+      tags: [AeroFocus]
+      operationId: getAeroProfile
+      summary: Get the signed-in user's AeroFocus profile
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      responses:
+        "200":
+          description: Profile lookup completed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AeroProfileEnvelope"
+        "401":
+          description: Authentication required.
+    put:
+      tags: [AeroFocus]
+      operationId: saveAeroProfile
+      summary: Save the signed-in user's profile and onboarding choices
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveAeroProfileRequest"
+      responses:
+        "200":
+          description: Profile saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AeroProfile"
+        "400":
+          description: Invalid profile values.
+        "401":
+          description: Authentication required.
+        "409":
+          description: Username is already in use.
+  /aero/dashboard:
+    get:
+      tags: [AeroFocus]
+      operationId: getAeroDashboard
+      summary: Get today's scroll tracker totals
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      responses:
+        "200":
+          description: Today's dashboard totals.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AeroDashboard"
+        "401":
+          description: Authentication required.
+  /aero/scrolls:
+    post:
+      tags: [AeroFocus]
+      operationId: recordAeroScrolls
+      summary: Record simulated scroll activity
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordAeroScrollsRequest"
+      responses:
+        "200":
+          description: Scroll activity recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordAeroScrollsResult"
+        "400":
+          description: Invalid activity values.
+        "401":
+          description: Authentication required.
+  /aero/friends:
+    get:
+      tags: [AeroFocus]
+      operationId: getAeroFriends
+      summary: Get friends and today's battle scores
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      responses:
+        "200":
+          description: Current friend list and live scores.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AeroFriendsEnvelope"
+        "401":
+          description: Authentication required.
+    post:
+      tags: [AeroFocus]
+      operationId: addAeroFriend
+      summary: Add a friend by username
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAeroFriendRequest"
+      responses:
+        "200":
+          description: Friend added.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddAeroFriendResult"
+        "400":
+          description: Invalid username.
+        "401":
+          description: Authentication required.
+        "404":
+          description: No profile exists for that username.
 components:
+  parameters:
+    AuthorizationSessionHeader:
+      name: Authorization
+      in: header
+      required: false
+      description: Opaque session token — Bearer followed by the session ID.
+      schema:
+        type: string
+    SessionCookie:
+      name: sid
+      in: cookie
+      required: false
+      description: Browser session cookie.
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +294,171 @@ components:
           type: string
       required:
         - status
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id:
+          type: string
+        email:
+          type: [string, "null"]
+          format: email
+        firstName:
+          type: [string, "null"]
+        lastName:
+          type: [string, "null"]
+        profileImageUrl:
+          type: [string, "null"]
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/AuthUser"
+            - type: "null"
+    MobileTokenExchangeRequest:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        code_verifier:
+          type: string
+          minLength: 1
+        redirect_uri:
+          type: string
+          minLength: 1
+          format: uri
+        state:
+          type: string
+          minLength: 1
+        nonce:
+          type: string
+          minLength: 1
+    MobileTokenExchangeSuccess:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    LogoutSuccess:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    AeroProfile:
+      type: object
+      required: [username, targetApps, onboardingComplete]
+      properties:
+        username:
+          type: string
+        targetApps:
+          type: array
+          items:
+            type: string
+        onboardingComplete:
+          type: boolean
+    AeroProfileEnvelope:
+      type: object
+      required: [profile]
+      properties:
+        profile:
+          oneOf:
+            - $ref: "#/components/schemas/AeroProfile"
+            - type: "null"
+    SaveAeroProfileRequest:
+      type: object
+      required: [username, targetApps, onboardingComplete]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 18
+        targetApps:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [Instagram, TikTok, YouTube Shorts]
+        onboardingComplete:
+          type: boolean
+    AeroDashboard:
+      type: object
+      required: [scrolls, activeSeconds, targetApps, day]
+      properties:
+        scrolls:
+          type: integer
+        activeSeconds:
+          type: integer
+        targetApps:
+          type: array
+          items:
+            type: string
+        day:
+          type: string
+          format: date
+    RecordAeroScrollsRequest:
+      type: object
+      required: [scrolls, activeSeconds]
+      properties:
+        scrolls:
+          type: integer
+          minimum: 1
+          maximum: 100
+        activeSeconds:
+          type: integer
+          minimum: 0
+          maximum: 3600
+    RecordAeroScrollsResult:
+      type: object
+      required: [scrolls, activeSeconds]
+      properties:
+        scrolls:
+          type: integer
+        activeSeconds:
+          type: integer
+    AeroFriend:
+      type: object
+      required: [userId, username, scrolls, activeSeconds]
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        scrolls:
+          type: integer
+        activeSeconds:
+          type: integer
+    AeroFriendsEnvelope:
+      type: object
+      required: [friends]
+      properties:
+        friends:
+          type: array
+          items:
+            $ref: "#/components/schemas/AeroFriend"
+    AddAeroFriendRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 18
+    AddAeroFriendResult:
+      type: object
+      required: [friend]
+      properties:
+        friend:
+          $ref: "#/components/schemas/AeroFriend"
 

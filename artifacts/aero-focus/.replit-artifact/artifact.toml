@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "AeroFocus"
+description = "A cross-platform mobile app that helps people curb short-form video scrolling with simulated usage tracking, a dynamic brain-decay meter, sarcastic roast alerts, and friend-versus-friend Scroll Battles. Includes Replit Auth and persistent profiles, progress, and battle data."
+version = "1.0.0"
+id = "artifacts/aero-focus"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 18373
+
+[services.development]
+run = "pnpm --filter @workspace/aero-focus run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aero-focus", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/aero-focus", "run", "serve" ]
+
+[services.env]
+PORT = "18373"
+BASE_PATH = "/"
