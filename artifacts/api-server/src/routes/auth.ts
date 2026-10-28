@@ -51,6 +51,12 @@ function setOidcCookie(res: Response, name: string, value: string) {
   });
 }
 
+function clearOidcCookies(res: Response) {
+  for (const name of ['code_verifier', 'nonce', 'state', 'return_to']) {
+    res.clearCookie(name, { path: '/' });
+  }
+}
+
 function getSafeReturnTo(value: unknown): string {
   if (
     typeof value !== 'string' ||
@@ -60,6 +66,16 @@ function getSafeReturnTo(value: unknown): string {
     return '/';
   }
   return value;
+}
+
+function redirectToSignInFailure(req: Request, res: Response) {
+  const destination = new URL(
+    getSafeReturnTo(req.cookies?.return_to),
+    `${getOrigin(req)}/`,
+  );
+  destination.searchParams.set('authError', 'sign_in_failed');
+  clearOidcCookies(res);
+  res.redirect(`${destination.pathname}${destination.search}${destination.hash}`);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -94,6 +110,9 @@ function getSafeErrorMetadata(error: unknown) {
   return {
     errorName: error instanceof Error ? error.name : 'Error',
     errorStatus: errorStatus ?? causeStatus,
+    ...(typeof error.error === 'string'
+      ? { oauthErrorCode: error.error.slice(0, 80) }
+      : {}),
   };
 }
 
@@ -170,7 +189,7 @@ router.get('/callback', async (req: Request, res: Response) => {
   const expectedState = req.cookies?.state;
 
   if (!codeVerifier || !expectedState) {
-    res.redirect('/api/login');
+    redirectToSignInFailure(req, res);
     return;
   }
 
@@ -186,23 +205,20 @@ router.get('/callback', async (req: Request, res: Response) => {
       expectedState,
       idTokenExpected: true,
     });
-  } catch {
-    res.redirect('/api/login');
+  } catch (err) {
+    req.log.error(getSafeErrorMetadata(err), 'Web sign-in callback error');
+    redirectToSignInFailure(req, res);
+    return;
+  }
+
+  const claims = tokens.claims();
+  if (!claims) {
+    redirectToSignInFailure(req, res);
     return;
   }
 
   const returnTo = getSafeReturnTo(req.cookies?.return_to);
-
-  res.clearCookie('code_verifier', { path: '/' });
-  res.clearCookie('nonce', { path: '/' });
-  res.clearCookie('state', { path: '/' });
-  res.clearCookie('return_to', { path: '/' });
-
-  const claims = tokens.claims();
-  if (!claims) {
-    res.redirect('/api/login');
-    return;
-  }
+  clearOidcCookies(res);
 
   const dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
 

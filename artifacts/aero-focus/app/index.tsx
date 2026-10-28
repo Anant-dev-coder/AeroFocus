@@ -55,21 +55,12 @@ export default function WelcomeScreen() {
       keyboardVerticalOffset={0}
     >
       <ScreenFrame contentStyle={styles.screen}>
-        <View style={styles.brandLine}>
-          <Image
-            source={require('../assets/images/icon.png')}
-            style={styles.icon}
-            accessibilityLabel="AeroFocus icon"
-          />
-          <View>
-            <Text style={[styles.brand, { color: colors.foreground }]}>
-              AEROFOCUS
-            </Text>
-            <Text style={[styles.brandTag, { color: colors.mutedForeground }]}>
-              ATTENTION RECOVERY
-            </Text>
-          </View>
-        </View>
+        <Image
+          source={require('../assets/images/aerofocus-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="AeroFocus, since 2026"
+        />
 
         <View style={styles.hero}>
           <Eyebrow>THE FEED IS NOT YOUR FRIEND</Eyebrow>
@@ -84,7 +75,7 @@ export default function WelcomeScreen() {
         </View>
 
         <View style={styles.brainSpot}>
-          <BrainVisual scrolls={0} size={242} />
+          <BrainVisual scrolls={0} size={200} />
           <View
             style={[
               styles.brainTag,
@@ -138,11 +129,8 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   keyboardFrame: { flex: 1 },
   screen: { flexGrow: 1, justifyContent: 'space-between', gap: 0 },
-  brandLine: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  icon: { width: 42, height: 42, borderRadius: 12 },
-  brand: { fontSize: 13, letterSpacing: 2.1, fontWeight: '800' },
-  brandTag: { fontSize: 8, letterSpacing: 1.2, marginTop: 3, fontWeight: '700' },
-  hero: { gap: 13, marginTop: 34 },
+  logo: { width: 190, height: 150, alignSelf: 'center' },
+  hero: { gap: 13, marginTop: 12 },
   headline: {
     fontSize: 36,
     lineHeight: 41,

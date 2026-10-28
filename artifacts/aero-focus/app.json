@@ -4,7 +4,7 @@
     "slug": "aero-focus",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/aerofocus-app-icon.png",
     "scheme": "aero-focus",
     "userInterfaceStyle": "dark",
     "ios": {
@@ -12,7 +12,7 @@
     },
     "android": {},
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/aerofocus-app-icon.png"
     },
     "plugins": [
       "expo-router",
@@ -20,8 +20,8 @@
       "expo-secure-store"
     ],
     "splash": {
-      "backgroundColor": "#080B08",
-      "image": "./assets/images/icon.png",
+      "backgroundColor": "#020511",
+      "image": "./assets/images/aerofocus-logo.png",
       "resizeMode": "contain"
     },
     "experiments": {

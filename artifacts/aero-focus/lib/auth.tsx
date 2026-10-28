@@ -55,11 +55,7 @@ export function getAeroApiBaseUrl(): string {
 }
 
 export async function getAeroSessionToken(): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return typeof window === 'undefined'
-      ? null
-      : window.localStorage.getItem(AUTH_TOKEN_KEY);
-  }
+  if (Platform.OS === 'web') return null;
   return SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 }
 
@@ -105,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     const token = await getAeroSessionToken();
-    if (!token) {
+    if (!token && Platform.OS !== 'web') {
       setUser(null);
       setIsLoading(false);
       return;
@@ -120,17 +116,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const result = await fetch(`${apiBase}/api/auth/user`, {
-        headers: { Authorization: `Bearer ${token}` },
+        ...(Platform.OS === 'web' ? { credentials: 'include' as const } : {}),
+        ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
       });
       if (!result.ok) throw new Error('Could not check your sign-in.');
       const data = (await result.json()) as { user: AeroUser | null };
       if (data.user) {
         setUser(data.user);
+        setError(null);
       } else {
-        await clearAeroSessionToken();
         setUser(null);
       }
-      setError(null);
     } catch (requestError) {
       setUser(null);
       setError(
@@ -148,7 +144,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser]);
 
   useEffect(() => {
-    if (response?.type !== 'success' || !request?.codeVerifier) return;
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('authError') !== 'sign_in_failed') return;
+
+    url.searchParams.delete('authError');
+    window.history.replaceState(
+      {},
+      '',
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    setError('Sign-in could not be completed. Please try again.');
+  }, []);
+
+  useEffect(() => {
+    if (
+      Platform.OS === 'web' ||
+      response?.type !== 'success' ||
+      !request?.codeVerifier
+    ) {
+      return;
+    }
 
     const { code, state } = response.params;
     let cancelled = false;
@@ -205,9 +222,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser, redirectUri, request, response]);
 
   const login = useCallback(async () => {
-    if (!request) return;
     setError(null);
     setIsLoginPending(true);
+
+    if (Platform.OS === 'web') {
+      const apiBase = getAeroApiBaseUrl();
+      if (!apiBase || typeof window === 'undefined') {
+        setError('The account service is not available in this preview.');
+        setIsLoginPending(false);
+        return;
+      }
+
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      window.location.assign(
+        `${apiBase}/api/login?returnTo=${encodeURIComponent(returnTo)}`,
+      );
+      return;
+    }
+
+    if (!request) {
+      setError('Sign-in is still getting ready. Please try again.');
+      setIsLoginPending(false);
+      return;
+    }
+
     try {
       const result = await promptAsync();
       if (result.type !== 'success') setIsLoginPending(false);
@@ -218,8 +256,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [promptAsync, request]);
 
   const logout = useCallback(async () => {
-    const token = await getAeroSessionToken();
     const apiBase = getAeroApiBaseUrl();
+    if (Platform.OS === 'web') {
+      if (!apiBase || typeof window === 'undefined') {
+        setError('The account service is not available in this preview.');
+        return;
+      }
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      window.location.assign(
+        `${apiBase}/api/logout?returnTo=${encodeURIComponent(returnTo)}`,
+      );
+      return;
+    }
+
+    const token = await getAeroSessionToken();
     try {
       if (token && apiBase) {
         await fetch(`${apiBase}/api/mobile-auth/logout`, {
@@ -239,7 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       isLoading,
-      isReady: !!request,
+      isReady: Platform.OS === 'web' || !!request,
       isAuthenticated: !!user,
       isLoginPending,
       error,
