@@ -2,7 +2,7 @@
 
 AeroFocus is a self-aware scroll tracker that turns doomscrolling into a visible habit, a little public shame, and a surprisingly motivating competition.
 
-[Website](https://example.com) • [Web App](https://example.com)
+[Website](https://github.com/Anant-dev-coder/AeroFocus) • [App source](https://github.com/Anant-dev-coder/AeroFocus/tree/main/artifacts/aero-focus)
 
 [![Expo](https://img.shields.io/badge/Expo-React%20Native-000000?logo=expo&logoColor=white)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -26,7 +26,7 @@ AeroFocus makes attention consumption visible. Instead of pretending your scroll
 - Dark, high-contrast mobile UI for focus and habit reflection
 - Onboarding flow for choosing your target apps
 - Simulated scroll tracking with “brain status” progression
-- Daily metrics and attention scorecards
+- Daily metrics and attention scorecard
 - Friend battle system with leaderboards and roast-style messages
 - Type-safe API contract generated from OpenAPI specs
 - App permission-aware flow designed to explain access clearly before activation
@@ -69,13 +69,32 @@ pnpm install
 pnpm run dev
 ```
 
+## Build an Android APK
+
+This project is configured as an Expo Android app so it can be packaged into an APK/AAB build for Android devices.
+
+```bash
+cd artifacts/aero-focus
+pnpm install
+npx expo prebuild --platform android
+npx expo run:android
+```
+
+To build a release APK from Expo:
+
+```bash
+cd artifacts/aero-focus
+npx expo export --platform android
+npx eas build -p android --profile production
+```
+
 ## Product tone
 
-AeroFocus is intentionally a little brutal. It is designed to feel sharp, honest, and slightly self-aware rather than polished-corporate or fluffy. The idea is simple: if your thumb is stealing your attention, the app should say it plainly.
+AeroFocus is intentionally a little brutal. It is designed to feel sharp, honest, and slightly self-aware rather than polished-corporate or fluffy. The idea is simple: if your thumb is stealing your attention, the app should let you know.
 
 ## Permission model
 
-This product is designed to be transparent about device access. The simulator-first experience makes it clear when tracking is simulated and when a real permission request would occur, so users understand the difference between a demo and real OS-level monitoring.
+This product is designed to be transparent about device access. The simulator-first experience makes it clear when tracking is simulated and when a real permission request would occur, so users understand the tradeoff before activation.
 
 ## Status
 
