@@ -10,7 +10,17 @@
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "package": "com.aerofocus.app",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/aerofocus-app-icon.png",
+        "backgroundColor": "#020511"
+      }
+    },
     "web": {
       "favicon": "./assets/images/aerofocus-app-icon.png"
     },
