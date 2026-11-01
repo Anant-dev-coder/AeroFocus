@@ -19,6 +19,8 @@ WebBrowser.maybeCompleteAuthSession();
 const AUTH_TOKEN_KEY = 'auth_session_token';
 const ISSUER_URL =
   process.env.EXPO_PUBLIC_ISSUER_URL ?? 'https://replit.com/oidc';
+const isMockAuthEnabled =
+  __DEV__ && process.env.EXPO_PUBLIC_ENABLE_MOCK_AUTH === 'true';
 
 export interface AeroUser {
   id: string;
@@ -41,6 +43,16 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getMockUser(): AeroUser {
+  return {
+    id: 'dev-user',
+    email: 'test@aerofocus.local',
+    firstName: 'Aero',
+    lastName: 'Tester',
+    profileImageUrl: null,
+  };
+}
+
 export function getAeroApiBaseUrl(): string {
   const configuredBase = process.env.EXPO_PUBLIC_API_BASE_URL;
   if (!configuredBase && Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -55,11 +67,17 @@ export function getAeroApiBaseUrl(): string {
 }
 
 export async function getAeroSessionToken(): Promise<string | null> {
+  if (isMockAuthEnabled) {
+    return 'dev_secure_session_token_placeholder';
+  }
+
   if (Platform.OS === 'web') return null;
   return SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 }
 
 async function storeAeroSessionToken(token: string): Promise<void> {
+  if (isMockAuthEnabled) return;
+
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -70,6 +88,8 @@ async function storeAeroSessionToken(token: string): Promise<void> {
 }
 
 async function clearAeroSessionToken(): Promise<void> {
+  if (isMockAuthEnabled) return;
+
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -100,6 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchUser = useCallback(async () => {
+    if (isMockAuthEnabled) {
+      setUser(getMockUser());
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     const token = await getAeroSessionToken();
     if (!token && Platform.OS !== 'web') {
       setUser(null);
@@ -162,7 +189,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (
       Platform.OS === 'web' ||
       response?.type !== 'success' ||
-      !request?.codeVerifier
+      !request?.codeVerifier ||
+      isMockAuthEnabled
     ) {
       return;
     }
@@ -225,6 +253,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setIsLoginPending(true);
 
+    if (isMockAuthEnabled) {
+      await storeAeroSessionToken('dev_secure_session_token_placeholder');
+      setUser(getMockUser());
+      setError(null);
+      setIsLoading(false);
+      setIsLoginPending(false);
+      return;
+    }
+
     if (Platform.OS === 'web') {
       const apiBase = getAeroApiBaseUrl();
       if (!apiBase || typeof window === 'undefined') {
@@ -256,6 +293,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [promptAsync, request]);
 
   const logout = useCallback(async () => {
+    if (isMockAuthEnabled) {
+      await clearAeroSessionToken();
+      setUser(null);
+      setError(null);
+      setIsLoading(false);
+      setIsLoginPending(false);
+      return;
+    }
+
     const apiBase = getAeroApiBaseUrl();
     if (Platform.OS === 'web') {
       if (!apiBase || typeof window === 'undefined') {
@@ -289,7 +335,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       isLoading,
-      isReady: Platform.OS === 'web' || !!request,
+      isReady: Platform.OS === 'web' || !!request || isMockAuthEnabled,
       isAuthenticated: !!user,
       isLoginPending,
       error,
