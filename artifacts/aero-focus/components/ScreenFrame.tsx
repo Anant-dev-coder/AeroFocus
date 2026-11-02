@@ -14,11 +14,13 @@ export function ScreenFrame({
   scroll = true,
   tabbed = false,
   contentStyle,
+  transparent = false,
 }: {
   children: ReactNode;
   scroll?: boolean;
   tabbed?: boolean;
   contentStyle?: ViewStyle;
+  transparent?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const colors = useColors();
@@ -37,7 +39,7 @@ export function ScreenFrame({
         style={[
           styles.frame,
           padding,
-          { backgroundColor: colors.background },
+          { backgroundColor: transparent ? 'transparent' : colors.background },
           contentStyle,
         ]}
       >
@@ -48,7 +50,10 @@ export function ScreenFrame({
 
   return (
     <ScrollView
-      style={[styles.frame, { backgroundColor: colors.background }]}
+      style={[
+        styles.frame,
+        { backgroundColor: transparent ? 'transparent' : colors.background },
+      ]}
       contentContainerStyle={[padding, styles.content, contentStyle]}
       contentInsetAdjustmentBehavior="never"
       keyboardShouldPersistTaps="handled"
