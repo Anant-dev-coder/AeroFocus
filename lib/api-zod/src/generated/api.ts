@@ -136,7 +136,7 @@ export const saveAeroProfileBodyUsernameMax = 18;
 
 
 export const SaveAeroProfileBody = zod.object({
-  "username": zod.string().min(saveAeroProfileBodyUsernameMin).max(saveAeroProfileBodyUsernameMax),
+  "username": zod.string().min(saveAeroProfileBodyUsernameMin).max(saveAeroProfileBodyUsernameMax).regex(/^[a-z0-9_]{3,18}$/),
   "targetApps": zod.array(zod.enum(['Instagram', 'TikTok', 'YouTube Shorts'])).min(1),
   "onboardingComplete": zod.boolean()
 })

@@ -61,17 +61,18 @@ router.put("/aero/profile", async (req, res) => {
 
   const parsed = SaveAeroProfileBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Check your username and target apps." });
+    const issue = parsed.error.issues[0];
+    const error =
+      issue?.path[0] === "username"
+        ? "Use 3–18 lowercase letters, numbers, or underscores for your username."
+        : issue?.path[0] === "targetApps"
+          ? "Choose at least one supported target app."
+          : "Your setup is incomplete. Please review your choices and try again.";
+    res.status(400).json({ error });
     return;
   }
 
   const username = parsed.data.username.trim().replace(/^@/, "").toLowerCase();
-  if (!/^[a-z0-9_]{3,18}$/.test(username)) {
-    res.status(400).json({
-      error: "Usernames must use 3–18 letters, numbers, or underscores.",
-    });
-    return;
-  }
 
   try {
     const [profile] = await db
